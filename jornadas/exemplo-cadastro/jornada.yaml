@@ -25,12 +25,16 @@ cards:
 
 cenas:
   - id: cadastro-erro
+    titulo: Formulário de cadastro
     node: "1:2"
   - id: cadastro-ok
+    titulo: Formulário de cadastro
     node: "1:3"
   - id: pagamento-monitorando
+    titulo: Monitoramento do pagamento
     node: "1:4"
   - id: pagamento-aprovado
+    titulo: Pagamento aprovado
     node: "1:5"
 
 # Cada beat = uma frase falada + o que a tela faz enquanto ela é dita.

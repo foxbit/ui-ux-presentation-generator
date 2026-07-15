@@ -6,12 +6,36 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { carregarJornada } from "./lib/jornada.mjs";
+import { estadoAprovacao } from "./lib/aprovacao.mjs";
 import { ErroDeUso, RAIZ, carregarEnv, encerrarComErro, log } from "./lib/util.mjs";
+
+const MOTIVO = {
+  "ainda-nao-aprovado":
+    "o storyboard ainda nao foi aprovado.\n" +
+    "  Revise e aprove:\n" +
+    "    npm run storyboard -- {slug}\n" +
+    "    npm run aprovar   -- {slug}",
+  "conteudo-mudou":
+    "o jornada.yaml mudou depois da aprovacao.\n" +
+    "  Revise o storyboard atualizado e aprove de novo:\n" +
+    "    npm run storyboard -- {slug}\n" +
+    "    npm run aprovar   -- {slug}",
+  "aprovacao-corrompida":
+    "o registro de aprovacao esta ilegivel. Aprove de novo: npm run aprovar -- {slug}",
+};
 
 async function main() {
   carregarEnv();
   const slug = process.argv[2];
   const j = carregarJornada(slug);
+
+  // Portao: render so roda com aprovacao valida para o conteudo atual.
+  const estado = estadoAprovacao(j);
+  if (!estado.ok) {
+    throw new ErroDeUso(
+      `Render bloqueado — ${MOTIVO[estado.motivo].replaceAll("{slug}", slug)}`,
+    );
+  }
 
   if (!existsSync(j.composicao)) {
     throw new ErroDeUso(`Falta o index.html. Rode antes: npm run build -- ${slug}`);

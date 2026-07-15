@@ -24,21 +24,37 @@ roda de novo, tudo se reencaixa.
 
 ```bash
 npm run doctor                # confere o ambiente
-npm run figma   -- <slug>     # PNGs dos frames + bboxes dos elementos (REST API)
-npm run narrate -- <slug>     # 1 WAV por beat (Kokoro local, pt-BR)
-npm run build   -- <slug>     # index.html + roteiro.md + timing.json
-npm run render  -- <slug>     # MP4  (--draft para revisar rápido)
-npm run pipeline -- <slug>    # tudo acima, em sequência
+npm run figma      -- <slug>  # PNGs dos frames + bboxes dos elementos (REST API)
+npm run storyboard -- <slug>  # storyboard.html: telas + locução + animação (portão)
+npm run aprovar    -- <slug>  # libera o render para o conteúdo atual
+npm run narrate    -- <slug>  # 1 WAV por beat (Kokoro local, pt-BR)
+npm run build      -- <slug>  # index.html + roteiro.md + timing.json
+npm run render     -- <slug>  # MP4  (--draft para revisar rápido)
+npm run pipeline   -- <slug>  # avança até o portão; após aprovar, segue até o MP4
 ```
 
 Cada etapa é idempotente e cacheada: mexer numa frase só regenera aquele áudio.
+
+## O portão de aprovação
+
+Entre o storyboard e o render existe um portão: **`render` só roda com aprovação
+válida.** `npm run aprovar` grava um hash do `jornada.yaml`; o render confere se
+esse hash bate com o arquivo atual. Editou o yaml depois de aprovar? O portão
+re-arma sozinho — "aprovado" significa "revisei *este* conteúdo", não um carimbo
+perpétuo. Sem bypass, por decisão de projeto (`src/lib/aprovacao.mjs`).
+
+O `storyboard.html` é a **estimativa** de pré-produção (tempos por contagem de
+palavras, telas com o zoom/cursor desenhados). O `roteiro.md` é o script com tempo
+**real**, gerado no `build` depois da narração. Dois momentos, duas precisões.
 
 ## Arquivos
 
 | Onde | O quê |
 | --- | --- |
 | `jornadas/<slug>/jornada.yaml` | **fonte da verdade** — cenas + beats |
-| `jornadas/<slug>/roteiro.md` | gerado: roteiro cronometrado, para aprovação |
+| `jornadas/<slug>/storyboard.html` | gerado: board de pré-produção, o portão de aprovação |
+| `jornadas/<slug>/.aprovacao.json` | gerado: hash do conteúdo aprovado (destrava o render) |
+| `jornadas/<slug>/roteiro.md` | gerado: roteiro cronometrado (tempo real, pós-narração) |
 | `jornadas/<slug>/.media/` | gerado: frames, áudios, `nodes.json`, `timing.json` |
 | `jornadas/<slug>/out/<slug>.mp4` | o vídeo |
 | `config/marca.json` | cores, tipografia, cursor, callout — a identidade |

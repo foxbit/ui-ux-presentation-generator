@@ -45,34 +45,47 @@ completo: `cenas` (id → node do Figma) e `beats`.
 Regra que evita retrabalho: **um beat = uma ideia falada + uma coisa acontecendo na
 tela.** Se a fala tem duas ideias, são dois beats.
 
-## 4. Importar e narrar
+## 4. Importar as telas e gerar o storyboard
 
 ```bash
-npm run figma   -- <slug>    # PNGs + bounding boxes dos elementos
-npm run narrate -- <slug>    # um WAV por beat (Kokoro, pt-BR, local)
-npm run build   -- <slug>    # composição + roteiro.md + timing.json
+npm run figma      -- <slug>   # PNGs + bounding boxes dos elementos
+npm run storyboard -- <slug>   # storyboard.html: telas + locução + animação
 ```
 
-O `build` imprime a proporção das seções. Se a demonstração ficar abaixo de 70%,
-a abertura ou o contexto estão longos demais — corte, não justifique.
+O `storyboard.html` é o artefato de aprovação. Cada painel mostra a **tela real
+com o zoom/cursor daquele beat desenhados por cima**, o texto da locução e o tempo
+**estimado** (por contagem de palavras — ainda não há áudio). Ele imprime a
+proporção das seções; se a demonstração ficar abaixo de 70%, a abertura ou o
+contexto estão longos demais — corte, não justifique.
 
-## 5. Aprovação (não pule)
+## 5. Aprovação (o portão — não pule)
 
-Mostre ao Angelo o **`roteiro.md`** gerado: é o texto cronometrado, com as marcações
-de cursor e zoom em cada beat. Renderizar leva minutos; corrigir o roteiro leva
-segundos. Ajuste até ele aprovar.
+Mostre o storyboard ao Angelo (abra o `storyboard.html`, ou tire um screenshot dele
+com o Chrome headless para revisar aqui na conversa). Ele **aprova ou pede ajustes**.
 
-Se ele quiser ouvir antes, os WAVs estão em `.media/audio/` — dá para tocar um beat
-isolado sem renderizar nada.
+- Ajuste → edite o `jornada.yaml`, rode `npm run storyboard` de novo, mostre outra vez.
+- Aprovado → **rode `npm run aprovar -- <slug>`**.
 
-## 6. Renderizar
+A aprovação se prende ao conteúdo do `jornada.yaml`. Se você editar qualquer coisa
+depois de aprovar, o portão re-arma e o render volta a ser bloqueado — é de
+propósito, para nunca renderizar algo que não foi revisado.
+
+## 6. Narrar e renderizar
 
 ```bash
-npm run render -- <slug> --draft   # revisão rápida
-npm run render -- <slug>           # entrega ao cliente
+npm run narrate -- <slug>          # um WAV por beat (Kokoro, pt-BR, local)
+npm run build   -- <slug>          # composição + roteiro.md + timing.json
+npm run render  -- <slug> --draft  # revisão rápida
+npm run render  -- <slug>          # entrega ao cliente
 ```
+
+O `render` recusa rodar sem aprovação válida. Se você quiser ouvir a voz antes de
+renderizar, os WAVs ficam em `.media/audio/` depois do `narrate`.
 
 Saída em `jornadas/<slug>/out/<slug>.mp4`.
+
+Ou tudo de uma vez: `npm run pipeline -- <slug>` avança até o portão na primeira
+rodada e, depois de `aprovar`, segue até o MP4 na rodada seguinte.
 
 Depois de renderizar, **olhe o vídeo antes de dizer que está pronto**: extraia alguns
 quadros nos beats com cursor e callout (`ffmpeg -ss <t> -i video.mp4 -frames:v 1 f.png`)

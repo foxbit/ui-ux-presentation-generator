@@ -6,6 +6,8 @@ node_modules/
 jornadas/*/.media/
 jornadas/*/index.html
 jornadas/*/roteiro.md
+jornadas/*/storyboard.html
+jornadas/*/.aprovacao.json
 jornadas/*/out/
 jornadas/*/renders/
 

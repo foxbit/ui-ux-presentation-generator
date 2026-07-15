@@ -64,15 +64,33 @@ npm run doctor          # confere tudo
 
 O modelo de voz (~310 MB) é baixado no primeiro uso para `~/.cache/hyperframes/tts/`.
 
+## O storyboard e o portão de aprovação
+
+Antes de processar o vídeo, o sistema gera um **storyboard** — um board de
+pré-produção, uma tela por painel, com o texto da locução, a animação daquele
+trecho (zoom/cursor desenhados na própria tela) e o tempo estimado. Você revisa,
+ajusta o `jornada.yaml` se precisar, e aprova:
+
+```bash
+npm run storyboard -- <slug>   # gera jornadas/<slug>/storyboard.html
+npm run aprovar    -- <slug>   # libera o render para esse conteúdo
+```
+
+O **`render` só roda com aprovação válida.** A aprovação se prende ao conteúdo: se
+você editar o `jornada.yaml` depois de aprovar, o portão re-arma e exige nova
+revisão — nunca se renderiza algo que não passou pelo storyboard.
+
 ## Ver funcionando sem Figma
 
-O exemplo vem com telas sintéticas — dá para renderizar sem token nenhum:
+O exemplo vem com telas sintéticas — dá para chegar ao vídeo sem token nenhum:
 
 ```bash
 node scripts/gerar-telas-exemplo.mjs
-npm run narrate -- exemplo-cadastro
-npm run build   -- exemplo-cadastro
-npm run render  -- exemplo-cadastro --draft
+npm run storyboard -- exemplo-cadastro
+npm run aprovar    -- exemplo-cadastro
+npm run narrate    -- exemplo-cadastro
+npm run build      -- exemplo-cadastro
+npm run render     -- exemplo-cadastro --draft
 ```
 
 ## Voz
@@ -93,7 +111,9 @@ os vídeos. Troque num lugar só.
 | --- | --- |
 | `npm run doctor` | confere ambiente e lista as jornadas |
 | `npm run figma -- <slug>` | baixa PNGs e as bounding boxes dos elementos |
+| `npm run storyboard -- <slug>` | gera o board de pré-produção para aprovação |
+| `npm run aprovar -- <slug>` | libera o render para o conteúdo atual |
 | `npm run narrate -- <slug>` | gera um WAV por beat (cacheado por hash) |
 | `npm run build -- <slug>` | monta a composição, o roteiro e o timing |
-| `npm run render -- <slug>` | renderiza o MP4 (`--draft` para revisar) |
-| `npm run pipeline -- <slug>` | tudo em sequência |
+| `npm run render -- <slug>` | renderiza o MP4 (`--draft`; exige aprovação) |
+| `npm run pipeline -- <slug>` | avança até o portão; após aprovar, segue até o MP4 |

@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
+import { estimarSegundos } from "./texto.mjs";
 import { ErroDeUso, JORNADAS, RAIZ, duracaoDoAudio, seg } from "./util.mjs";
 
 export const SECOES = ["abertura", "contextualizacao", "demonstracao", "encerramento"];
@@ -20,7 +21,7 @@ export function caminhosDaJornada(slug) {
   return {
     slug,
     dir,
-    spec: join(dir, "jornada.yaml"),
+    specPath: join(dir, "jornada.yaml"),
     media: join(dir, ".media"),
     frames: join(dir, ".media", "frames"),
     audio: join(dir, ".media", "audio"),
@@ -28,6 +29,8 @@ export function caminhosDaJornada(slug) {
     timing: join(dir, ".media", "timing.json"),
     composicao: join(dir, "index.html"),
     roteiro: join(dir, "roteiro.md"),
+    storyboard: join(dir, "storyboard.html"),
+    aprovacao: join(dir, ".aprovacao.json"),
     saida: join(dir, "out"),
   };
 }
@@ -37,13 +40,13 @@ export function carregarJornada(slug) {
     throw new ErroDeUso("Informe a jornada. Ex.: npm run build -- us-001-cadastro");
   }
   const p = caminhosDaJornada(slug);
-  if (!existsSync(p.spec)) {
-    throw new ErroDeUso(`Jornada "${slug}" nao encontrada (esperava ${p.spec}).`);
+  if (!existsSync(p.specPath)) {
+    throw new ErroDeUso(`Jornada "${slug}" nao encontrada (esperava ${p.specPath}).`);
   }
 
   let bruto;
   try {
-    bruto = YAML.parse(readFileSync(p.spec, "utf-8"));
+    bruto = YAML.parse(readFileSync(p.specPath, "utf-8"));
   } catch (e) {
     throw new ErroDeUso(`jornada.yaml de "${slug}" tem YAML invalido: ${e.message}`);
   }
@@ -144,32 +147,80 @@ export function calcularTiming({ spec, audio }) {
   const fimDosBeats = seg(t);
   const total = seg(fimDosBeats + encerramento);
 
-  // Agrupa beats consecutivos da mesma cena numa unica janela de imagem: e o que
-  // permite o zoom sair suave de um beat para o outro em vez de reiniciar.
-  const cenas = [];
+  const cenas = agruparSessoes(beats, spec);
+  return {
+    abertura: { inicio: 0, duracao: abertura },
+    encerramento: { inicio: fimDosBeats, duracao: encerramento },
+    beats,
+    cenas,
+    sessoes: cenas,
+    fimDosBeats,
+    total,
+    estimado: false,
+  };
+}
+
+/**
+ * Timing SEM audio: usa a estimativa por contagem de palavras. E o que o
+ * storyboard mostra antes da narracao existir -- tempos aproximados, marcados
+ * como tal, so para dar nocao de ritmo e duracao total. A duracao real vem do
+ * calcularTiming depois que o Kokoro roda.
+ */
+export function calcularTimingEstimado({ spec }) {
+  const abertura = Number(spec.cards.abertura) || 0;
+  const encerramento = Number(spec.cards.encerramento) || 0;
+
+  let t = abertura;
+  const beats = spec.beats.map((b) => {
+    const fala = estimarSegundos(b.texto, spec.voz);
+    const pausa = b.pausaDepois ?? spec.pausaEntreBeats;
+    const inicio = seg(t);
+    const duracao = seg(fala + pausa);
+    t = seg(t + duracao);
+    return { ...b, inicio, duracao, fala: seg(fala), pausa: seg(pausa) };
+  });
+
+  const fimDosBeats = seg(t);
+  return {
+    abertura: { inicio: 0, duracao: abertura },
+    encerramento: { inicio: fimDosBeats, duracao: encerramento },
+    beats,
+    sessoes: agruparSessoes(beats, spec),
+    fimDosBeats,
+    total: seg(fimDosBeats + encerramento),
+    estimado: true,
+  };
+}
+
+/** Titulo legivel de uma sessao: `titulo` da cena no yaml, senao o proprio id. */
+export function tituloDaCena(spec, cenaId) {
+  const cena = spec.cenas.find((c) => c.id === cenaId);
+  return cena?.titulo ?? cenaId;
+}
+
+/**
+ * Agrupa beats consecutivos da mesma cena numa sessao. Alem de ser a unidade de
+ * revisao do storyboard, e o que permite o zoom deslizar de um beat para o outro
+ * dentro da mesma tela em vez de reiniciar a cada frase.
+ */
+export function agruparSessoes(beats, spec) {
+  const sessoes = [];
   for (const b of beats) {
-    const ultima = cenas.at(-1);
+    const ultima = sessoes.at(-1);
     if (ultima && ultima.cena === b.cena) {
       ultima.fim = seg(b.inicio + b.duracao);
       ultima.beats.push(b.id);
     } else {
-      cenas.push({
+      sessoes.push({
         cena: b.cena,
+        titulo: tituloDaCena(spec, b.cena),
         inicio: b.inicio,
         fim: seg(b.inicio + b.duracao),
         beats: [b.id],
       });
     }
   }
-
-  return {
-    abertura: { inicio: 0, duracao: abertura },
-    encerramento: { inicio: fimDosBeats, duracao: encerramento },
-    beats,
-    cenas,
-    fimDosBeats,
-    total,
-  };
+  return sessoes;
 }
 
 /** Proporcao por secao -- a skill de narracao pede demonstracao em 70-80%. */

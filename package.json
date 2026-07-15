@@ -7,6 +7,8 @@
   "scripts": {
     "doctor": "node src/doctor.mjs",
     "figma": "node src/figma-import.mjs",
+    "storyboard": "node src/storyboard.mjs",
+    "aprovar": "node src/aprovar.mjs",
     "narrate": "node src/narrate.mjs",
     "build": "node src/build.mjs",
     "render": "node src/render.mjs",

@@ -14,33 +14,8 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { carregarJornada } from "./lib/jornada.mjs";
+import { prepararTexto } from "./lib/texto.mjs";
 import { ErroDeUso, RAIZ, carregarEnv, encerrarComErro, log, pythonDoVenv } from "./lib/util.mjs";
-
-/**
- * O Kokoro le literalmente o que recebe: uma marcacao de roteiro vira ruido na
- * boca do narrador. Tira marcacao e normaliza o que o modelo pronuncia mal.
- */
-function prepararTexto(bruto) {
-  let t = String(bruto)
-    .replace(/\[[^\]]*\]/g, " ") // [PAUSA 2s], [ABERTURA] etc.
-    .replace(/[*_`#]/g, " ") // markdown
-    .replace(/\s+/g, " ")
-    .trim();
-
-  // Siglas que o modelo soletraria errado em portugues.
-  const pronuncia = [
-    [/\bUX\b/g, "U Xis"],
-    [/\bUI\b/g, "U Ai"],
-    [/\bCPF\b/g, "C P F"],
-    [/\bCEP\b/g, "C E P"],
-    [/\bCNPJ\b/g, "C N P J"],
-    [/\bAPI\b/g, "A P I"],
-    [/\bSMS\b/g, "S M S"],
-    [/\be-mail\b/gi, "email"],
-  ];
-  for (const [de, para] of pronuncia) t = t.replace(de, para);
-  return t;
-}
 
 const hashDe = (texto, voz) =>
   createHash("sha1").update(`${texto}|${voz.voz}|${voz.velocidade}|${voz.idioma}`).digest("hex").slice(0, 12);
