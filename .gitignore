@@ -1,0 +1,13 @@
+node_modules/
+.venv/
+.env
+
+# Artefatos gerados por jornada: pesados e reproduziveis a partir do jornada.yaml
+jornadas/*/.media/
+jornadas/*/index.html
+jornadas/*/roteiro.md
+jornadas/*/out/
+jornadas/*/renders/
+
+# Amostras de voz do spike inicial
+amostras-voz/

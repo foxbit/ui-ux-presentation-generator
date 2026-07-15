@@ -1,0 +1,43 @@
+{
+  "_comentario": "Identidade visual dos cards de abertura/encerramento, legendas e callouts. Template neutro -- troque cores, fonte e logo aqui e todos os videos acompanham.",
+
+  "estudio": "Angelo Rosa",
+  "assinatura": "UX & Product Design",
+  "logo": null,
+
+  "cores": {
+    "fundo": "#0E1116",
+    "fundoSuave": "#171B22",
+    "texto": "#F2F4F7",
+    "textoSuave": "#98A2B3",
+    "destaque": "#FF6B35",
+    "destaqueSuave": "#FFB59B",
+    "legendaFundo": "rgba(14, 17, 22, 0.82)"
+  },
+
+  "tipografia": {
+    "familia": "Inter, 'Segoe UI', system-ui, sans-serif",
+    "tituloPeso": 700,
+    "corpoPeso": 400
+  },
+
+  "legendas": {
+    "tamanho": 40,
+    "margemInferior": 72,
+    "larguraMaxima": 1360
+  },
+
+  "cursor": {
+    "tamanho": 28,
+    "cor": "#FFFFFF",
+    "corSombra": "rgba(0,0,0,0.45)",
+    "corClique": "#FF6B35"
+  },
+
+  "callout": {
+    "escalaZoom": 1.35,
+    "escurecerFundo": 0.55,
+    "raioBorda": 12,
+    "duracaoTransicao": 0.6
+  }
+}

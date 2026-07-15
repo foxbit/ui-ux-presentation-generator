@@ -1,0 +1,108 @@
+id: exemplo-cadastro
+titulo: Cadastro e Assinatura
+cliente: Plataforma
+data: 2026-07-14
+
+# Cole a URL do arquivo do Figma. Cada cena aponta para um frame
+# (botão direito no frame → Copy link to selection).
+figma:
+  arquivo: https://www.figma.com/design/EXEMPLO/jornadas
+
+video:
+  largura: 1920
+  altura: 1080
+  fps: 30
+
+voz:
+  voz: pm_alex # pf_dora (fem) | pm_alex | pm_santa
+  velocidade: 1.0
+
+cards:
+  abertura: 3.2
+  encerramento: 3.5
+  textoFinal: Esse é o novo fluxo de cadastro.
+  contato: Podem testar no staging. Estamos aqui para qualquer dúvida.
+
+cenas:
+  - id: cadastro-erro
+    node: "1:2"
+  - id: cadastro-ok
+    node: "1:3"
+  - id: pagamento-monitorando
+    node: "1:4"
+  - id: pagamento-aprovado
+    node: "1:5"
+
+# Cada beat = uma frase falada + o que a tela faz enquanto ela é dita.
+# A duração vem do áudio real, então você nunca precisa cronometrar nada.
+beats:
+  - id: b01
+    secao: abertura
+    texto: Boa tarde! Vou mostrar para vocês como ficou o novo fluxo de cadastro e assinatura que desenvolvemos.
+    cena: cadastro-ok
+
+  - id: b02
+    secao: contextualizacao
+    texto: Esse vídeo é para vocês entenderem cada etapa do processo e como o novo usuário vai interagir com a plataforma. Ainda estamos em fase de testes.
+    cena: cadastro-ok
+
+  - id: b03
+    secao: demonstracao
+    texto: Aqui você tem o formulário de cadastro. Os campos principais são nome, e-mail, CPF, CEP e senha.
+    cena: cadastro-ok
+
+  - id: b04
+    secao: demonstracao
+    texto: O sistema valida cada campo em tempo real. Se você digita um e-mail inválido, a mensagem de erro aparece na hora.
+    cena: cadastro-erro
+    callout:
+      alvo: nome:Campo E-mail
+
+  - id: b05
+    secao: demonstracao
+    texto: Isso deixa bem mais fácil para o usuário saber exatamente o que precisa corrigir, sem descobrir o problema só no final.
+    cena: cadastro-erro
+    callout:
+      alvo: nome:Mensagem de erro
+      zoom: 1.6
+
+  - id: b06
+    secao: demonstracao
+    texto: Quando todos os campos estão corretos e você marca o aceite dos termos, o botão de continuar fica ativo.
+    cena: cadastro-ok
+    cursor:
+      para: nome:Aceite dos termos
+      acao: mover
+
+  - id: b07
+    secao: demonstracao
+    texto: Clicando aqui, o checkout abre em uma nova aba.
+    cena: cadastro-ok
+    cursor:
+      para: nome:Botao Continuar
+      acao: clicar
+
+  - id: b08
+    secao: demonstracao
+    texto: Enquanto isso, a tela original entra em modo de monitoramento. Você não precisa ficar atualizando a página.
+    cena: pagamento-monitorando
+    callout:
+      alvo: nome:Status do pagamento
+
+  - id: b09
+    secao: demonstracao
+    texto: Assim que o pagamento é confirmado, a plataforma detecta sozinha e a tela muda para pagamento aprovado.
+    cena: pagamento-aprovado
+
+  - id: b10
+    secao: demonstracao
+    texto: Daí é só clicar em acessar painel para entrar na plataforma como assinante.
+    cena: pagamento-aprovado
+    cursor:
+      para: nome:Botao Acessar painel
+      acao: clicar
+
+  - id: b11
+    secao: encerramento
+    texto: Pronto! Bem mais simples e direto. Qualquer dúvida, é só chamar a gente.
+    cena: pagamento-aprovado

@@ -1,0 +1,23 @@
+{
+  "name": "ui-ux-presentation-generator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Gera videos narrados de jornadas de usuario a partir de designs Figma/HTML",
+  "type": "module",
+  "scripts": {
+    "doctor": "node src/doctor.mjs",
+    "figma": "node src/figma-import.mjs",
+    "narrate": "node src/narrate.mjs",
+    "build": "node src/build.mjs",
+    "render": "node src/render.mjs",
+    "pipeline": "node src/pipeline.mjs"
+  },
+  "dependencies": {
+    "gsap": "^3.15.0",
+    "hyperframes": "^0.7.58",
+    "yaml": "^2.9.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
