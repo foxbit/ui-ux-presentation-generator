@@ -3,7 +3,7 @@
  * Pipeline de uma jornada, ciente do portao de aprovacao.
  *
  * "Avanca ate onde e permitido":
- *   figma -> storyboard -> [PORTAO] -> narrate -> build -> render
+ *   importar (figma e/ou html) -> storyboard -> [PORTAO] -> narrate -> build -> render
  *
  * A primeira rodada para no portao e mostra o storyboard para revisar. Depois de
  * `npm run aprovar`, rodar de novo segue direto ate o MP4. Cada etapa e
@@ -12,7 +12,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { caminhosDaJornada } from "./lib/jornada.mjs";
+import { caminhosDaJornada, carregarJornada } from "./lib/jornada.mjs";
 import { estadoAprovacao } from "./lib/aprovacao.mjs";
 import { ErroDeUso, RAIZ, encerrarComErro, log } from "./lib/util.mjs";
 
@@ -27,17 +27,23 @@ function etapa(nome, script, slug, extras) {
 
 function main() {
   const slug = process.argv[2];
-  if (!slug) throw new ErroDeUso("Uso: npm run pipeline -- <jornada> [--draft] [--refigma]");
+  if (!slug) throw new ErroDeUso("Uso: npm run pipeline -- <jornada> [--draft] [--reimportar]");
 
   const j = caminhosDaJornada(slug);
   if (!existsSync(j.specPath)) throw new ErroDeUso(`Jornada "${slug}" nao existe (${j.specPath}).`);
   const extras = process.argv.slice(3);
+  const reimportar = extras.includes("--refigma") || extras.includes("--reimportar");
 
-  // Ate o portao: importar telas e (re)gerar o storyboard.
-  if (existsSync(j.nodes) && !extras.includes("--refigma")) {
-    log.detalhe("figma: ja importado, pulando (use --refigma para refazer).");
+  // Ate o portao: importar telas (Figma e/ou HTML, conforme as cenas) e (re)gerar o storyboard.
+  const { spec } = carregarJornada(slug);
+  const temFigma = spec.cenas.some((c) => c.node);
+  const temHtml = spec.cenas.some((c) => c.url);
+
+  if (existsSync(j.nodes) && !reimportar) {
+    log.detalhe("importar: ja importado, pulando (use --reimportar para refazer).");
   } else {
-    etapa("figma", "figma-import.mjs", slug, extras);
+    if (temFigma) etapa("figma", "figma-import.mjs", slug, extras);
+    if (temHtml) etapa("html", "html-import.mjs", slug, extras);
   }
   etapa("storyboard", "storyboard.mjs", slug, extras);
 

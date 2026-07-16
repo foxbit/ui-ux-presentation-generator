@@ -8,6 +8,7 @@
     "doctor": "node src/doctor.mjs",
     "vozes": "node src/vozes.mjs",
     "figma": "node src/figma-import.mjs",
+    "html": "node src/html-import.mjs",
     "storyboard": "node src/storyboard.mjs",
     "aprovar": "node src/aprovar.mjs",
     "narrate": "node src/narrate.mjs",
@@ -18,6 +19,7 @@
   "dependencies": {
     "gsap": "^3.15.0",
     "hyperframes": "^0.7.58",
+    "puppeteer-core": "^25.3.0",
     "yaml": "^2.9.0"
   },
   "engines": {

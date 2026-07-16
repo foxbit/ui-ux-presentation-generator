@@ -1,6 +1,6 @@
 ---
 name: nova-jornada
-description: Produz um vídeo narrado de jornada de usuário do começo ao fim — entrevista o Angelo, lê os frames do Figma, escreve o roteiro, mostra para aprovação e renderiza o MP4. Use quando pedirem para criar/gerar/produzir um vídeo de jornada, apresentação de fluxo, demo de tela ou "mandar a jornada X para o cliente".
+description: Produz um vídeo narrado de jornada de usuário do começo ao fim — entrevista o Angelo, lê os frames do Figma (ou navega um app local), escreve o roteiro, mostra para aprovação e renderiza o MP4. Use quando pedirem para criar/gerar/produzir um vídeo de jornada, apresentação de fluxo, demo de tela ou "mandar a jornada X para o cliente".
 ---
 
 # Produzir uma jornada
@@ -16,7 +16,10 @@ O trabalho de fato é escrever bons beats. O resto é encanamento.
 Descubra (perguntando, ou lendo o que o Angelo já mandou):
 
 - **Título e cliente** — vão no card de abertura.
-- **URL do arquivo do Figma** e quais frames formam a jornada, na ordem.
+- **A fonte das telas**: um arquivo do Figma, ou um app rodando localmente
+  (`localhost:...`)? Muda todo o passo 2 e 4 abaixo.
+- **URL do arquivo do Figma** e quais frames formam a jornada (ou, se for app
+  local, a `baseUrl` e as rotas de cada tela), na ordem.
 - **O que o vídeo precisa provar.** Esta é a pergunta que importa. "Mostrar o
   cadastro" é fraco. "Mostrar que a validação inline evita o usuário descobrir o
   erro só no final" tem um argumento — e o roteiro se escreve quase sozinho.
@@ -24,6 +27,9 @@ Descubra (perguntando, ou lendo o que o Angelo já mandou):
   homologação, no ar). Muda o tom e o que precisa ser dito com honestidade.
 
 Se existir história de usuário escrita, leia antes de perguntar qualquer coisa.
+
+Se a fonte é um **app local**, pule para a seção "Fonte alternativa: app local"
+mais abaixo — ela substitui os passos 2 e 4 desta seção.
 
 ## 2. Explorar o Figma (use o figma-console-mcp)
 
@@ -62,10 +68,33 @@ só com aval explícito.
 > (token, limite por minuto), que é a fonte da verdade das coordenadas. Uma não
 > substitui a outra.
 
+## Fonte alternativa: app local (em vez do Figma)
+
+Se a jornada nasce de um app em desenvolvimento (não de um design pronto no
+Figma), pule a exploração via `figma-console-mcp` — não há frames pra achar, o
+próprio app já é a tela real. Em vez disso, confirme com o Angelo:
+
+- A **`baseUrl`** onde o app está rodando (ex.: `http://localhost:5173`) — precisa
+  estar de pé antes de importar.
+- A **rota de cada tela** (`cenas[].url`). Se um estado só existe depois de uma
+  interação (erro de validação, modal), veja com ele que seletor CSS clicar/
+  preencher para chegar lá (`cenas[].acoes`).
+- Se os elementos que o roteiro vai mirar já têm `data-jornada="Nome"` no HTML.
+  Se não tiverem, é a mesma conversa que "renomear layers no Figma": sem nome
+  legível, o cursor/callout não tem o que mirar e o roteiro fica frágil. Pode
+  pedir para o Angelo (ou quem mantém o app) adicionar o atributo.
+
+Abra o app no navegador junto com o Angelo para ver cada tela antes de escrever
+narração — mesma regra do Figma: **não invente elemento que não está lá.**
+
+Depois disso, vá direto para o passo 3 (escrever o roteiro) usando `url:` no
+lugar de `node:` nas `cenas`, e no passo 4 rode `npm run html` no lugar de
+`npm run figma`.
+
 ## 3. Escrever o roteiro
 
 Leia a skill `narracao-jornada` e siga. Escreva o `jornadas/<slug>/jornada.yaml`
-completo: `cenas` (id → node do Figma) e `beats`.
+completo: `cenas` (id → node do Figma, ou `url` de um app local) e `beats`.
 
 Regra que evita retrabalho: **um beat = uma ideia falada + uma coisa acontecendo na
 tela.** Se a fala tem duas ideias, são dois beats.
@@ -73,7 +102,8 @@ tela.** Se a fala tem duas ideias, são dois beats.
 ## 4. Importar as telas e gerar o storyboard
 
 ```bash
-npm run figma      -- <slug>   # PNGs + bounding boxes dos elementos
+npm run figma      -- <slug>   # PNGs + bounding boxes (cenas com `node`, Figma)
+npm run html       -- <slug>   # idem, navegando o app local (cenas com `url`)
 npm run storyboard -- <slug>   # storyboard.html: telas + locução + animação
 ```
 

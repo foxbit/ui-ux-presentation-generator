@@ -1,18 +1,19 @@
 # Gerador de vídeos de jornada
 
-Transforma uma jornada do Figma num vídeo narrado em português, pronto para mandar
-ao cliente: cursor simulado, zoom nos detalhes que a narração cita, legendas e
-cards de abertura e encerramento.
+Transforma uma jornada — de um arquivo do Figma **ou** de um app rodando
+localmente — num vídeo narrado em português, pronto para mandar ao cliente:
+cursor simulado, zoom nos detalhes que a narração cita, legendas e cards de
+abertura e encerramento.
 
 <p align="center">
-  <em>jornada.yaml → PNGs do Figma + narração pt-BR → MP4 1080p</em>
+  <em>jornada.yaml → telas do Figma ou de um app local + narração pt-BR → MP4 1080p</em>
 </p>
 
 ## Como se usa
 
 Peça ao Claude: **"quero fazer o vídeo da jornada de cadastro"**. A skill
-`nova-jornada` entrevista você, lê o Figma, escreve o roteiro, mostra para aprovação
-e renderiza.
+`nova-jornada` entrevista você (inclusive se a tela vem do Figma ou de um app
+local), lê as telas, escreve o roteiro, mostra para aprovação e renderiza.
 
 Na mão, se preferir:
 
@@ -45,6 +46,11 @@ ela é dita:
 Você **nunca escreve tempo**. O pipeline sintetiza cada beat, mede a duração real do
 áudio com `ffprobe` e monta a timeline em cima dessa medida. Mudou uma frase? Roda
 de novo — cursor, zoom e legenda se reencaixam sozinhos.
+
+No exemplo acima, `cena: cadastro-erro` aponta para uma cena declarada em `cenas:`
+com `node: "1:2"` (um frame do Figma). Se a tela em vez disso for um app rodando
+localmente, a cena usa `url: /cadastro` no lugar de `node` — ver a seção
+[Duas fontes de tela](#duas-fontes-de-tela-figma-ou-app-local) mais abaixo.
 
 ## Instalação
 
@@ -82,9 +88,93 @@ O **`render` só roda com aprovação válida.** A aprovação se prende ao cont
 você editar o `jornada.yaml` depois de aprovar, o portão re-arma e exige nova
 revisão — nunca se renderiza algo que não passou pelo storyboard.
 
+## Duas fontes de tela: Figma ou app local
+
+Cada **cena** (em `cenas:`) escolhe de onde vem sua imagem e as coordenadas que o
+cursor e o callout vão mirar. Duas opções, mutuamente compatíveis dentro da mesma
+jornada:
+
+| Cena aponta pra | Campo no yaml | Importa com |
+| --- | --- | --- |
+| Frame de um arquivo do Figma | `node: "1:2"` | `npm run figma -- <slug>` |
+| Tela de um app rodando localmente (ex.: `localhost:5173`) | `url: /cadastro` | `npm run html -- <slug>` |
+
+Os dois importadores produzem o mesmo `.media/nodes.json` (PNG + bounding boxes
+por elemento) — o resto do pipeline (`storyboard`, `build`, `render`) não sabe nem
+precisa saber qual dos dois você usou.
+
+### Usando um app local
+
+É a opção certa quando a tela já existe em código (protótipo em desenvolvimento,
+app já no ar) e não faz sentido recriar o design no Figma só para gravar o vídeo.
+
+**1. Suba o app** no ambiente local, e anote onde ele responde (`http://localhost:5173`,
+por exemplo). Ele precisa estar rodando antes de importar.
+
+**2. Marque no HTML os elementos que o roteiro vai mirar** com o atributo
+`data-jornada`, um por elemento — é o mesmo espírito de nomear layers no Figma:
+
+```html
+<input data-jornada="Campo E-mail" name="email" />
+<div data-jornada="Mensagem de erro" class="erro">E-mail inválido.</div>
+<button data-jornada="Botao Continuar">Continuar</button>
+```
+
+Sem esse atributo, o elemento simplesmente não existe para o `cursor.para` ou o
+`callout.alvo` — e o erro ao rodar o `build` aponta exatamente qual nome faltou.
+
+**3. Escreva as cenas** no `jornada.yaml` com `url` no lugar de `node`, e a
+`baseUrl` do app no topo:
+
+```yaml
+html:
+  baseUrl: http://localhost:5173
+
+cenas:
+  - id: cadastro-ok
+    titulo: Formulário de cadastro
+    url: /cadastro
+
+  # Mesma URL, mas um estado que só existe depois de uma interação: a jornada
+  # descreve os passos que levam até lá antes de tirar o screenshot.
+  - id: cadastro-erro
+    titulo: Formulário com erro
+    url: /cadastro
+    acoes:
+      - tipo: clicar
+        alvo: "button[type=submit]"
+      - tipo: esperar
+        alvo: ".erro.mostrar"
+```
+
+`acoes` aceita `clicar`, `digitar` (com `valor`), `esperar` e `rolar` — todos
+recebem `alvo` como um seletor CSS. Use quando o estado da tela (erro de
+validação, modal, hover) só aparece depois de uma interação, em vez de ter rota
+própria.
+
+**4. Importe e siga o fluxo normal:**
+
+```bash
+npm run html       -- <slug>   # navega o app, tira screenshot, extrai bboxes
+npm run storyboard -- <slug>   # igual ao fluxo do Figma daqui pra frente
+npm run aprovar    -- <slug>
+npm run narrate    -- <slug>
+npm run build      -- <slug>
+npm run render     -- <slug> --draft
+```
+
+Os beats continuam mirando os elementos pelo nome, sem mudar nada:
+`cursor: { para: "nome:Botao Continuar" }`, `callout: { alvo: "nome:Mensagem de erro" }`.
+
+Não precisa instalar navegador nenhum a mais: o `npm run html` reaproveita o
+Chrome headless que o `render` já usa (via `npx hyperframes browser ensure`, na
+instalação).
+
 ## Ver funcionando sem Figma
 
-O exemplo vem com telas sintéticas — dá para chegar ao vídeo sem token nenhum:
+O exemplo vem com telas sintéticas já geradas (não é a mesma coisa que o fluxo de
+app local acima — aqui as PNGs já existem em disco, não tem navegação nenhuma) —
+dá para chegar ao vídeo sem token nenhum:
 
 ```bash
 node scripts/gerar-telas-exemplo.mjs
@@ -115,8 +205,9 @@ próprio resultado).
 
 **`gemini`** — API paga do Google, qualidade de modelo comercial. 30 vozes, o
 idioma é detectado automaticamente do texto (não precisa indicar `pt-BR`). Custo:
-~US$20 por milhão de tokens de áudio — na prática, poucos centavos por vídeo.
-Precisa de `GEMINI_API_KEY` no `.env` ([aistudio.google.com/apikey](https://aistudio.google.com/apikey)).
+~US$10 por milhão de tokens de áudio no modelo padrão (2.5 Flash) — na prática,
+poucos centavos por vídeo. Precisa de `GEMINI_API_KEY` no `.env`
+([aistudio.google.com/apikey](https://aistudio.google.com/apikey)).
 
 ```yaml
 voz:
@@ -126,7 +217,7 @@ voz:
                       # Despina, Erinome, Algenib, Rasalgethi, Laomedeia, Achernar,
                       # Alnilam, Schedar, Gacrux, Pulcherrima, Achird, Zubenelgenubi,
                       # Vindemiatrix, Sadachbia, Sadaltager, Sulafat
-  model: gemini-3.1-flash-tts-preview   # padrão; ver alternativas em CLAUDE.md
+  model: gemini-2.5-flash-preview-tts   # padrão; ver alternativas em CLAUDE.md
 ```
 
 **Escreva com acentuação**, nos dois provedores. Sem acento o Kokoro atropela as
@@ -142,7 +233,8 @@ os vídeos. Troque num lugar só.
 | Comando | O que faz |
 | --- | --- |
 | `npm run doctor` | confere ambiente e lista as jornadas |
-| `npm run figma -- <slug>` | baixa PNGs e as bounding boxes dos elementos |
+| `npm run figma -- <slug>` | baixa PNGs e as bounding boxes dos elementos (cenas com `node`, Figma) |
+| `npm run html -- <slug>` | navega um app local, tira screenshot e extrai bboxes (cenas com `url`) |
 | `npm run storyboard -- <slug>` | gera o board de pré-produção para aprovação |
 | `npm run aprovar -- <slug>` | libera o render para o conteúdo atual |
 | `npm run narrate -- <slug>` | gera um WAV por beat (cacheado por hash) |

@@ -1,8 +1,8 @@
 # ui-ux-presentation-generator
 
-Gera vídeos narrados de jornadas de usuário (Figma → MP4) para enviar a clientes.
-Uma jornada vira um vídeo com narração em pt-BR, cursor simulado, zoom nos
-detalhes, legendas e cards de abertura/encerramento.
+Gera vídeos narrados de jornadas de usuário (Figma **ou** app rodando localmente
+→ MP4) para enviar a clientes. Uma jornada vira um vídeo com narração em pt-BR,
+cursor simulado, zoom nos detalhes, legendas e cards de abertura/encerramento.
 
 **Para produzir um vídeo, use a skill `nova-jornada`.** Ela conduz o processo todo.
 Para escrever ou revisar roteiro, use `narracao-jornada`.
@@ -24,7 +24,8 @@ roda de novo, tudo se reencaixa.
 
 ```bash
 npm run doctor                # confere o ambiente
-npm run figma      -- <slug>  # PNGs dos frames + bboxes dos elementos (REST API)
+npm run figma      -- <slug>  # PNGs dos frames + bboxes dos elementos (REST API do Figma)
+npm run html       -- <slug>  # idem, mas navegando um app local (cenas com `url`)
 npm run storyboard -- <slug>  # storyboard.html: telas + locução + animação (portão)
 npm run aprovar    -- <slug>  # libera o render para o conteúdo atual
 npm run narrate    -- <slug>  # 1 WAV por beat (Kokoro local, pt-BR)
@@ -101,12 +102,17 @@ por hash em `narrate.mjs` — trocar de provider invalida o áudio, de propósit
 | Vozes pt-BR nativas | 3 (`pm_alex`, `pm_santa`, `pf_dora`) | 30, idioma é auto-detectado do texto |
 | Qualidade | Voz mais fraca do Kokoro | Voz de modelo comercial |
 
-`voz.model` (só para `gemini`) escolhe o modelo — padrão `gemini-3.1-flash-tts-preview`.
+`voz.model` (só para `gemini`) escolhe o modelo — padrão `gemini-2.5-flash-preview-tts`
+(trocado de `gemini-3.1-flash-tts-preview`: o 3.1 limitou a taxa após poucas
+chamadas seguidas, mesmo com pausas entre tentativas — quota de preview mais
+apertada. 2.5 Flash também é mais barato, US$10/milhão vs US$20/milhão).
 
-**Cuidado ao mexer em `src/tts/gemini.mjs`:** o parsing da resposta foi escrito
-contra a documentação pública, sem uma chamada real para validar (sem chave de
-teste). Se a primeira síntese falhar em "o áudio não apareceu onde eu esperava",
-o erro mostra as chaves do JSON recebido — ajuste `extrairAudio()` com base nisso.
+O parsing de `src/tts/gemini.mjs` foi validado contra uma chamada real (não só
+contra a documentação): o áudio vem em `steps[].content[].data`
+(`mime_type: "audio/l16"`, PCM 24kHz/16-bit/mono sem header), não em
+`interaction.output_audio.data` como a doc/SDK sugerem. Se um formato de resposta
+novo aparecer, o erro mostra as chaves do JSON recebido — ajuste `extrairAudio()`
+com base nisso.
 
 A estimativa de palavras/segundo do storyboard (`lib/texto.mjs`) foi calibrada
 para o Kokoro. Numa jornada com `voz.provider: gemini`, a estimativa de tempo do
@@ -126,6 +132,37 @@ A importação é REST de propósito: roda headless, sem depender do Figma Deskt
 aberto, e é a fonte da verdade das coordenadas que miram cursor e callout. O CLI
 `hyperframes figma asset` não serve aqui porque **não expõe as bounding boxes** —
 por isso o importador é próprio.
+
+## Duas fontes de tela: Figma ou app local
+
+`build.mjs`/`storyboard.mjs` não sabem de onde veio `.media/nodes.json` — só
+esperam o mesmo contrato (PNG por cena + bboxes). Isso é o que permite ter dois
+importadores, `figma-import.mjs` e `html-import.mjs`, produzindo a mesma saída
+por caminhos diferentes. Cada cena escolhe uma fonte:
+
+| Cena aponta pra | Campo no yaml | Importador |
+| --- | --- | --- |
+| Frame do Figma | `node: "1:2"` | `npm run figma` (REST API) |
+| Página de um app rodando localmente | `url: /cadastro` | `npm run html` (navega e tira screenshot) |
+
+Uma jornada pode até misturar as duas — cada importador só mexe nas cenas do seu
+campo e funde no mesmo `nodes.json`.
+
+Para a fonte HTML:
+
+- `html.baseUrl` no topo do yaml (ex.: `http://localhost:5173`) é obrigatório se
+  alguma cena tiver `url`. O app precisa estar rodando antes de importar.
+- Marque no HTML do app os elementos que o roteiro vai mirar com
+  `data-jornada="Nome Legível"` — é o equivalente a nomear layers no Figma. Sem
+  isso, o elemento não aparece em `nodes.porNome` e `nome:X` não resolve.
+- `cena.acoes` (lista opcional de `{ tipo, alvo, valor? }`, tipos `clicar` |
+  `digitar` | `esperar` | `rolar`, `alvo` é um seletor CSS) roda antes do
+  screenshot — é como alcançar um estado que só existe depois de uma interação
+  (erro de validação, modal, hover), quando o app não tem uma URL própria pra
+  esse estado.
+- O importador reusa o Chrome headless que o `render` já gerencia
+  (`npx hyperframes browser path`, via `puppeteer-core`) — não baixa outro
+  browser.
 
 ## Convenções
 

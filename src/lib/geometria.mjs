@@ -44,8 +44,9 @@ export function resolverAlvo(ref, cenaId, nodes, onde) {
   const cena = nodes?.cenas?.[cenaId];
   if (!cena) {
     throw new ErroDeUso(
-      `${onde}: a cena "${cenaId}" nao foi importada do Figma, entao "${ref}" nao pode ser resolvido.\n` +
-        "  Rode `npm run figma -- <jornada>` ou use coordenadas [x, y].",
+      `${onde}: a cena "${cenaId}" ainda nao foi importada, entao "${ref}" nao pode ser resolvido.\n` +
+        "  Rode `npm run figma -- <jornada>` (cena com `node`) ou `npm run html -- <jornada>` (cena com `url`),\n" +
+        "  ou use coordenadas [x, y].",
     );
   }
 

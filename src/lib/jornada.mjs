@@ -6,6 +6,7 @@ import { ErroDeUso, JORNADAS, RAIZ, duracaoDoAudio, seg } from "./util.mjs";
 
 export const SECOES = ["abertura", "contextualizacao", "demonstracao", "encerramento"];
 export const ACOES = ["mover", "clicar", "digitar", "rolar"];
+export const ACOES_CENA = ["clicar", "digitar", "esperar", "rolar"];
 export const PROVEDORES_VOZ = ["kokoro", "gemini"];
 
 const PADRAO = {
@@ -86,8 +87,17 @@ function validar(spec, p) {
     if (!c.id) erros.push(`cenas[${i}]: falta \`id\`.`);
     else if (idsCena.has(c.id)) erros.push(`cenas[${i}]: id "${c.id}" duplicado.`);
     else idsCena.add(c.id);
-    if (!c.node && !c.imagem) {
-      erros.push(`cena "${c.id ?? i}": precisa de \`node\` (Figma) ou \`imagem\` (arquivo local).`);
+    if (!c.node && !c.imagem && !c.url) {
+      erros.push(
+        `cena "${c.id ?? i}": precisa de \`node\` (Figma), \`imagem\` (arquivo local) ou \`url\` (HTML).`,
+      );
+    }
+    for (const [ai, acao] of (c.acoes ?? []).entries()) {
+      const onde = `cena "${c.id ?? i}", acoes[${ai}]`;
+      if (!ACOES_CENA.includes(acao.tipo)) {
+        erros.push(`${onde}: tipo "${acao.tipo}" invalido. Use: ${ACOES_CENA.join(" | ")}.`);
+      }
+      if (!acao.alvo) erros.push(`${onde}: falta \`alvo\` (seletor CSS).`);
     }
   }
 
