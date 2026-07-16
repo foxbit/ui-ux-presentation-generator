@@ -89,6 +89,21 @@ sem erro nenhum:
 - **FIGMA_TOKEN** no `.env`, com escopo `File content: read`.
 - O modelo (~310 MB) fica em `~/.cache/hyperframes/tts/`, compartilhado com o CLI.
 
+## Duas rotas para o Figma (não confundir)
+
+| Para quê | Como | Limite |
+| --- | --- | --- |
+| Explorar o arquivo, ver telas, achar node-ids | **`figma-console-mcp`** (ponte WebSocket p/ o Figma Desktop) | sem cota |
+| Importar PNGs + bboxes → `nodes.json` | **`npm run figma`** (REST API + `FIGMA_TOKEN`) | ~10+/min |
+
+**Nunca use o MCP oficial `claude.ai Figma` para navegar**: no plano Starter são
+**6 chamadas por mês no total** — some no meio do trabalho. Só o `whoami` é isento.
+
+A importação é REST de propósito: roda headless, sem depender do Figma Desktop
+aberto, e é a fonte da verdade das coordenadas que miram cursor e callout. O CLI
+`hyperframes figma asset` não serve aqui porque **não expõe as bounding boxes** —
+por isso o importador é próprio.
+
 ## Convenções
 
 - Código e comentários em **português**, sem acento em identificadores.

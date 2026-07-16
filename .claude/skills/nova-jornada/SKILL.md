@@ -25,17 +25,42 @@ Descubra (perguntando, ou lendo o que o Angelo já mandou):
 
 Se existir história de usuário escrita, leia antes de perguntar qualquer coisa.
 
-## 2. Ler o Figma
+## 2. Explorar o Figma (use o figma-console-mcp)
 
-Use o MCP do Figma (já autenticado) para ver os frames: `get_metadata` no arquivo
-lista os nós com seus ids e nomes; `get_screenshot` mostra como a tela realmente é.
+Para achar os frames e ver as telas, use o **`figma-console-mcp`** — é uma ponte
+WebSocket local para o Figma Desktop, sem cota de uso.
 
-Você precisa saber o que existe em cada tela para escrever narração honesta. **Não
-invente elemento que não está no design.**
+**Não use o MCP oficial `claude.ai Figma` para navegar**: no plano Starter do Angelo
+ele dá **6 chamadas por mês no total** (confirmado na doc da Figma), e acaba sem
+aviso no meio de uma jornada. O `whoami` é isento; o resto não.
+
+Confirme a ponte com `figma_get_status` (`probe: true`). Se não estiver conectada,
+peça ao Angelo para abrir o arquivo no Figma **Desktop** com o plugin da ponte.
+
+Fluxo de descoberta:
+
+- **`figma_get_selection`** — o Angelo seleciona um frame no Figma e você recebe
+  node-id, nome e dimensões. É o jeito mais rápido de montar a lista de `cenas`.
+- **`figma_get_file_data`** (`verbosity: "summary"`, `depth: 1`) — navega a árvore
+  do arquivo atrás dos frames e seus ids/nomes, sem estourar o contexto.
+- **`figma_capture_screenshot`** (`nodeId`) — mostra como a tela realmente é.
+
+Você precisa ver cada tela para escrever narração honesta. **Não invente elemento
+que não está no design.** (Depois do `npm run figma`, os PNGs também ficam em
+`.media/frames/` — dá para simplesmente abri-los.)
+
+O node-id sai no formato `2888-115663` (com traço). Cole assim mesmo no
+`jornada.yaml`: o importador normaliza para `2888:115663` sozinho.
 
 Confira os **nomes dos layers** que você vai mirar com cursor/callout. Se estiverem
 como `Frame 1247`, avise o Angelo — vale renomear no Figma antes, porque o roteiro
-vai ficar ilegível e frágil.
+fica ilegível e frágil. Renomear pelo MCP é possível, mas é edição no arquivo dele:
+só com aval explícito.
+
+> **Duas rotas para o Figma, de propósito.** Descoberta e autoria: figma-console-mcp
+> (ver telas, achar ids). Importação de PNGs + bboxes: `npm run figma`, pela REST API
+> (token, limite por minuto), que é a fonte da verdade das coordenadas. Uma não
+> substitui a outra.
 
 ## 3. Escrever o roteiro
 
