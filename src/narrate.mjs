@@ -24,7 +24,10 @@ import { prepararTexto } from "./lib/texto.mjs";
 import { sintetizarGemini } from "./tts/gemini.mjs";
 import { ErroDeUso, RAIZ, carregarEnv, encerrarComErro, log, pythonDoVenv } from "./lib/util.mjs";
 
-const GEMINI_MODELO_PADRAO = "gemini-3.1-flash-tts-preview";
+// 2.5 Flash em vez do 3.1 Flash (mais novo): o 3.1 limitou a taxa apos poucas
+// chamadas seguidas mesmo com pausas entre tentativas -- quota de preview mais
+// apertada. 2.5 Flash tambem e mais barato (US$10/milhao vs US$20/milhao).
+const GEMINI_MODELO_PADRAO = "gemini-2.5-flash-preview-tts";
 
 const hashDe = (texto, voz) =>
   createHash("sha1")
