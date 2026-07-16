@@ -18,7 +18,11 @@ VOZES = os.path.join(CACHE, "voices", "voices-v1.0.bin")
 
 
 def main() -> int:
-    job = json.load(sys.stdin)
+    # Le os BYTES e decodifica UTF-8 na mao. `json.load(sys.stdin)` usaria o
+    # encoding do locale -- cp1252 no Windows -- e transformaria "você" em
+    # "vocÃª", que o Kokoro pronuncia literalmente. O texto chega sempre em
+    # UTF-8 do Node, entao decodificamos UTF-8, independente da maquina.
+    job = json.loads(sys.stdin.buffer.read().decode("utf-8"))
     itens = job["itens"]
     if not itens:
         json.dump({"resultados": []}, sys.stdout)

@@ -6,10 +6,15 @@
  * palavras do storyboard bate com o que o Kokoro realmente fala.
  */
 
-// Medido com pm_alex @ 1x sobre a jornada de exemplo: ~2.18 palavras faladas por
-// segundo, ja incluindo a respiracao natural entre frases. Serve para a ESTIMATIVA
-// do storyboard; a duracao real continua vindo do ffprobe depois da narracao.
-const PALAVRAS_POR_SEGUNDO = 2.18;
+// Medido com pm_alex @ 1x sobre os 11 beats da jornada de exemplo (194 palavras,
+// 65.1s): ~2.98 palavras por segundo, variando entre 2.7 e 3.5 por beat. Serve para
+// a ESTIMATIVA do storyboard; a duracao real vem do ffprobe depois da narracao.
+//
+// Recalibrado: o valor antigo (2.18) foi medido antes da correcao de encoding no
+// kokoro_batch.py, quando o texto acentuado chegava como mojibake e o modelo
+// gastava tempo pronunciando lixo. Se voce trocar a voz ou mexer no `velocidade`,
+// vale remedir -- e so comparar contagem de palavras com a duracao dos WAVs.
+const PALAVRAS_POR_SEGUNDO = 2.98;
 
 /**
  * O Kokoro le literalmente o que recebe: marcacao de roteiro vira ruido na boca
