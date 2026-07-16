@@ -6,10 +6,11 @@ import { ErroDeUso, JORNADAS, RAIZ, duracaoDoAudio, seg } from "./util.mjs";
 
 export const SECOES = ["abertura", "contextualizacao", "demonstracao", "encerramento"];
 export const ACOES = ["mover", "clicar", "digitar", "rolar"];
+export const PROVEDORES_VOZ = ["kokoro", "gemini"];
 
 const PADRAO = {
   video: { largura: 1920, altura: 1080, fps: 30 },
-  voz: { voz: "pm_alex", velocidade: 1.0, idioma: "pt-br" },
+  voz: { provider: "kokoro", voz: "pm_alex", velocidade: 1.0, idioma: "pt-br" },
   cards: { abertura: 3.2, encerramento: 3.2 },
   // Respiro padrao entre beats. Sem isso a narracao emenda uma frase na outra
   // e o video soa afobado -- o Kokoro nao deixa silencio nas bordas.
@@ -75,6 +76,10 @@ function validar(spec, p) {
   if (!spec.cliente) erros.push("falta `cliente`.");
   if (!spec.cenas.length) erros.push("nenhuma cena declarada em `cenas`.");
   if (!spec.beats.length) erros.push("nenhum beat declarado em `beats`.");
+
+  if (!PROVEDORES_VOZ.includes(spec.voz.provider)) {
+    erros.push(`voz.provider "${spec.voz.provider}" invalido. Use: ${PROVEDORES_VOZ.join(" | ")}.`);
+  }
 
   const idsCena = new Set();
   for (const [i, c] of spec.cenas.entries()) {

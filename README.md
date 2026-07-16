@@ -63,6 +63,8 @@ npm run doctor          # confere tudo
 ```
 
 O modelo de voz (~310 MB) é baixado no primeiro uso para `~/.cache/hyperframes/tts/`.
+`GEMINI_API_KEY` no `.env` é opcional — só necessária se alguma jornada usar
+`voz.provider: gemini` (ver seção "Voz" abaixo).
 
 ## O storyboard e o portão de aprovação
 
@@ -95,10 +97,40 @@ npm run render     -- exemplo-cadastro --draft
 
 ## Voz
 
-TTS local (Kokoro-82M), sem custo e sem API. Três vozes pt-BR: `pm_alex`,
-`pm_santa` (masculinas) e `pf_dora` (feminina). Escolha em `voz:` no `jornada.yaml`.
+Dois provedores, escolhidos por `voz.provider` no `jornada.yaml`:
 
-**Escreva com acentuação.** Sem acento o modelo atropela as palavras.
+**`kokoro`** (padrão) — TTS local, sem custo e sem API. Três vozes pt-BR:
+`pm_alex`, `pm_santa` (masculinas) e `pf_dora` (feminina).
+
+```yaml
+voz:
+  provider: kokoro
+  voz: pm_alex
+  velocidade: 1.0
+```
+
+Compare as vozes com o ouvido: `npm run vozes` gera uma página com amostras (inclui
+também vozes de outros idiomas falando português, e misturas — ver `--help` no
+próprio resultado).
+
+**`gemini`** — API paga do Google, qualidade de modelo comercial. 30 vozes, o
+idioma é detectado automaticamente do texto (não precisa indicar `pt-BR`). Custo:
+~US$20 por milhão de tokens de áudio — na prática, poucos centavos por vídeo.
+Precisa de `GEMINI_API_KEY` no `.env` ([aistudio.google.com/apikey](https://aistudio.google.com/apikey)).
+
+```yaml
+voz:
+  provider: gemini
+  voz: Kore          # Zephyr, Puck, Charon, Kore, Fenrir, Leda, Orus, Aoede,
+                      # Callirrhoe, Autonoe, Enceladus, Iapetus, Umbriel, Algieba,
+                      # Despina, Erinome, Algenib, Rasalgethi, Laomedeia, Achernar,
+                      # Alnilam, Schedar, Gacrux, Pulcherrima, Achird, Zubenelgenubi,
+                      # Vindemiatrix, Sadachbia, Sadaltager, Sulafat
+  model: gemini-3.1-flash-tts-preview   # padrão; ver alternativas em CLAUDE.md
+```
+
+**Escreva com acentuação**, nos dois provedores. Sem acento o Kokoro atropela as
+palavras (o Gemini tolera melhor, mas o hábito vale para os dois).
 
 ## Marca
 

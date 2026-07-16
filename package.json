@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "doctor": "node src/doctor.mjs",
+    "vozes": "node src/vozes.mjs",
     "figma": "node src/figma-import.mjs",
     "storyboard": "node src/storyboard.mjs",
     "aprovar": "node src/aprovar.mjs",

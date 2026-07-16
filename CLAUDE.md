@@ -89,6 +89,29 @@ sem erro nenhum:
 - **FIGMA_TOKEN** no `.env`, com escopo `File content: read`.
 - O modelo (~310 MB) fica em `~/.cache/hyperframes/tts/`, compartilhado com o CLI.
 
+## Dois provedores de voz
+
+`voz.provider` no `jornada.yaml` escolhe quem narra. Ambos passam pelo mesmo cache
+por hash em `narrate.mjs` — trocar de provider invalida o áudio, de propósito.
+
+| | `kokoro` (padrão) | `gemini` |
+| --- | --- | --- |
+| Custo | Grátis | ~centavos de dólar por vídeo |
+| Onde roda | Local (venv) | API do Google (`GEMINI_API_KEY` no `.env`) |
+| Vozes pt-BR nativas | 3 (`pm_alex`, `pm_santa`, `pf_dora`) | 30, idioma é auto-detectado do texto |
+| Qualidade | Voz mais fraca do Kokoro | Voz de modelo comercial |
+
+`voz.model` (só para `gemini`) escolhe o modelo — padrão `gemini-3.1-flash-tts-preview`.
+
+**Cuidado ao mexer em `src/tts/gemini.mjs`:** o parsing da resposta foi escrito
+contra a documentação pública, sem uma chamada real para validar (sem chave de
+teste). Se a primeira síntese falhar em "o áudio não apareceu onde eu esperava",
+o erro mostra as chaves do JSON recebido — ajuste `extrairAudio()` com base nisso.
+
+A estimativa de palavras/segundo do storyboard (`lib/texto.mjs`) foi calibrada
+para o Kokoro. Numa jornada com `voz.provider: gemini`, a estimativa de tempo do
+storyboard pode destoar do tempo real até alguém recalibrar para aquela voz.
+
 ## Duas rotas para o Figma (não confundir)
 
 | Para quê | Como | Limite |

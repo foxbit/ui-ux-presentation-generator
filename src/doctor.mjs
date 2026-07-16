@@ -92,6 +92,18 @@ for (const c of checagens) {
   }
 }
 
+// Opcional: nao conta para o codigo de saida. O Kokoro (padrao) e local e
+// sozinho ja libera o pipeline inteiro -- o Gemini so importa para quem
+// escolher `voz.provider: gemini` numa jornada.
+console.log();
+if (process.env.GEMINI_API_KEY) {
+  log.ok(`${"Gemini (opcional)".padEnd(20)} GEMINI_API_KEY definida`);
+} else {
+  log.detalhe(
+    `${"Gemini (opcional)".padEnd(20)} sem GEMINI_API_KEY -- so necessaria se usar voz.provider: gemini`,
+  );
+}
+
 const jornadas = existsSync(JORNADAS)
   ? readdirSync(JORNADAS, { withFileTypes: true }).filter((d) => d.isDirectory())
   : [];

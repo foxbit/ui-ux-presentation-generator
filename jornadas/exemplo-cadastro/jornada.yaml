@@ -14,6 +14,7 @@ video:
   fps: 30
 
 voz:
+  provider: kokoro # kokoro (local, gratis) | gemini (API paga, ver README)
   voz: pm_alex # pf_dora (fem) | pm_alex | pm_santa
   velocidade: 1.0
 
